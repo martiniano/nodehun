@@ -26,6 +26,7 @@ before_build:
 
 build_script:
   - node-gyp rebuild
+  - npm install
 
 test_script:
   # Output versions for reference.
