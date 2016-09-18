@@ -1,0 +1,33 @@
+language: node_js
+
+os:
+  - linux
+  - osx
+
+# Node versions to test against.
+node_js:
+    - "0.10"
+    - "0.12"
+    - "iojs"
+    - "4"
+    - "5"
+    - "6"
+    - "node" # latest
+
+addons:
+  # addons required for compiling native node modules
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+      - g++-4.8-multilib
+      - gcc-multilib
+
+env:
+  - CXX=g++-4.8
+
+script:
+  - npm install -g node-gyp
+  - node-gyp rebuild
+  - npm test
