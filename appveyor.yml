@@ -25,7 +25,6 @@ before_build:
   - npm install -g node-gyp
 
 build_script:
-  - node-gyp rebuild
   - npm install
 
 test_script:
