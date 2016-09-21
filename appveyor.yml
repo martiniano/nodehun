@@ -31,5 +31,5 @@ test_script:
   # Output versions for reference.
   - node --version
   - npm --version
-
+  - npm install
   - npm test
