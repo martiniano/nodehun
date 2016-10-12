@@ -48,4 +48,6 @@ addons:
 script:
   - npm install -g node-gyp
   - node-gyp rebuild
+  - node --version
+  - npm --version
   - npm test
