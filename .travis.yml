@@ -30,4 +30,4 @@ env:
 script:
   - npm install -g node-gyp
   - node-gyp rebuild
-- npm test
+  - npm test
