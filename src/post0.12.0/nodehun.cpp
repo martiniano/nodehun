@@ -370,14 +370,26 @@ void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i)
       argv[2] = Local<Value>::New(isolate, Null(isolate));
   }
   else if(spellData->numSuggest > 0) {
+    std::string dict_encoding = spellData->obj->spellClass->get_dict_encoding();
+
     if(spellData->multiple) {
       Local<Array> suglist = Array::New(isolate, spellData->numSuggest);
-      for(int t = 0; t < spellData->numSuggest; t++)
-	suglist->Set(t,String::NewFromUtf8(isolate, spellData->suggestions[t]));
+      for(int t = 0; t < spellData->numSuggest; t++){
+        if (dict_encoding.compare("ISO8859-1") == 0){
+          const uint8_t* oneByteSuggestion = reinterpret_cast<const uint8_t*>(spellData->suggestions[t]);
+          suglist->Set(t, String::NewFromOneByte(isolate, oneByteSuggestion));
+        } else if (dict_encoding.compare("UTF-8") == 0){
+          suglist->Set(t, String::NewFromUtf8(isolate, spellData->suggestions[t]));
+        }
+      }
       argv[2] = suglist;
-    }
-    else {
-      argv[2] = String::NewFromUtf8(isolate, spellData->suggestions[0]);
+    }else {
+        if (dict_encoding.compare("ISO8859-1") == 0){
+          const uint8_t* oneByteSuggestion = reinterpret_cast<const uint8_t*>(spellData->suggestions[0]);
+          argv[2] = String::NewFromOneByte(isolate, oneByteSuggestion);
+        } else if (dict_encoding.compare("UTF-8") == 0){
+          argv[2] = String::NewFromUtf8(isolate, spellData->suggestions[0]);
+        }
     }
   }
   spellData->obj->spellClass->free_list(&(spellData->suggestions), spellData->numSuggest);
