@@ -164,10 +164,20 @@ void Nodehun::SpellDictionary::isCorrect(const FunctionCallbackInfo<Value>& args
       Nodehun::CorrectData* corrData = new Nodehun::CorrectData();
       String::Utf8Value arg0(args[0]->ToString());
 
+      std::string dict_encoding = obj->spellClass->get_dict_encoding();
+      
+      if (dict_encoding.compare("ISO8859-1") == 0){
+        Local<String> wordAsUtf8 = String::NewFromUtf8(isolate, *arg0);
+        uint8_t buffer[arg0.length()];
+        wordAsUtf8->WriteOneByte(buffer);
+        corrData->word.append((char *)buffer);
+      } else if (dict_encoding.compare("UTF-8") == 0){
+        corrData->word.append(*arg0);
+      }
+
       corrData->isolate = isolate;
       corrData->callback.Reset(isolate, callback);
       corrData->request.data = corrData;
-      corrData->word.append(*arg0);
       corrData->obj = obj;
       corrData->isCorrect = false;
       uv_queue_work(uv_default_loop(), &corrData->request,
@@ -212,11 +222,20 @@ void Nodehun::SpellDictionary::sendCorrect(uv_work_t* request, int i)
   Isolate* isolate = corrData->isolate;
   HandleScope scope(isolate);
 
+  std::string dict_encoding = corrData->obj->spellClass->get_dict_encoding();
+
   const unsigned argc = 3;
   Local<Value> argv[argc];
   argv[0] = Local<Value>::New(isolate, Null(isolate));
   argv[1] = Local<Value>::New(isolate, Boolean::New(isolate, corrData->isCorrect));
-  argv[2] = Local<Value>::New(isolate, String::NewFromUtf8(isolate, corrData->word.c_str()));
+  
+  if (dict_encoding.compare("ISO8859-1") == 0){
+    const uint8_t* oneByteWord = reinterpret_cast<const uint8_t*>(corrData->word.c_str());
+    argv[2] = Local<Value>::New(isolate, String::NewFromOneByte(isolate, oneByteWord));
+  } else if (dict_encoding.compare("UTF-8") == 0){
+    argv[2] = Local<Value>::New(isolate, String::NewFromUtf8(isolate, corrData->word.c_str()));
+  }
+
   Local<Function> cb = Local<Function>::New(isolate, corrData->callback);
   cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
   corrData->callback.Reset();
